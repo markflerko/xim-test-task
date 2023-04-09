@@ -1,7 +1,6 @@
 import { DataSource } from "typeorm";
-import { Category } from "./entity/Category";
-import { Post } from "./entity/Post";
-import { User } from "./entity/User";
+import { Post } from "./modules/posts/posts.entity";
+
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: "localhost",
@@ -11,7 +10,7 @@ export const AppDataSource = new DataSource({
   database: "db",
   synchronize: true,
   logging: true,
-  entities: [Post, Category, User],
+  entities: [Post],
   subscribers: [],
   migrations: [],
 });

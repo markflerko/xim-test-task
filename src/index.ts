@@ -1,29 +1,14 @@
-import * as bodyParser from "body-parser";
-import * as express from "express";
-import { Request, Response } from "express";
+import "dotenv/config";
 import "reflect-metadata";
+import App from "./app";
 import { AppDataSource } from "./data-source";
-import { AppRoutes } from "./routes";
+import PostsController from "./modules/posts/posts.controller";
 
 AppDataSource.initialize()
   .then(() => {
-    const app = express();
-    app.use(bodyParser.json());
+    const PORT = +process.env.PORT || 5001;
 
-    AppRoutes.forEach((route) => {
-      app[route.method](
-        route.path,
-        (request: Request, response: Response, next: Function) => {
-          route
-            .action(request, response)
-            .then(() => next)
-            .catch((err) => next(err));
-        }
-      );
-    });
-
-    app.listen(3000);
-
-    console.log("Express application is up and running on port 3000");
+    const app = new App([new PostsController()], PORT);
+    app.listen();
   })
   .catch((error) => console.log(error));
