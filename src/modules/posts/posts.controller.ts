@@ -13,8 +13,8 @@ class PostsController {
     this.initializeRepository();
   }
 
-  public async initializeRepository() {
-    this.postRepository = await AppDataSource.manager.getRepository(Post);
+  public initializeRepository() {
+    this.postRepository = AppDataSource.manager.getRepository(Post);
   }
 
   public initializeRoutes() {
