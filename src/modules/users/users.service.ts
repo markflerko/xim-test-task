@@ -1,4 +1,3 @@
-import * as bcrypt from "bcrypt";
 import { Repository } from "typeorm";
 import { AppDataSource } from "../../data-source";
 import { User } from "./users.entity";
@@ -14,20 +13,13 @@ class UsersService {
     this.userRepository = AppDataSource.manager.getRepository(User);
   }
 
-  public getUsers = () => {
-    return this.userRepository.find();
+  public findUserByEmail = (email: string) => {
+    return this.userRepository.findOne({ where: { email } });
   };
 
-  public signup = async ({ email, password }) => {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const createdUser = this.userRepository.create({
-      email,
-      password: hashedPassword,
-    });
-
+  public createUser = async (dto) => {
+    const createdUser = this.userRepository.create(dto);
     await this.userRepository.save(createdUser);
-
     return createdUser;
   };
 }
