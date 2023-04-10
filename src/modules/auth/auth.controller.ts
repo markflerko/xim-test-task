@@ -1,6 +1,8 @@
 import * as express from "express";
 import { Request, Response } from "express";
+import RequestWithUser from "../../interfaces/request-with-user.interface";
 import authMiddleware from "../../middlewares/auth.middleware";
+import refreshMiddleware from "../../middlewares/refresh.middleware";
 import responseBuilder from "../../utils/responseBuilder";
 import AuthService from "./auth.service";
 
@@ -13,18 +15,33 @@ class AuthController {
   }
 
   public initializeRoutes() {
-    this.router.get("/profile", authMiddleware, this.profile);
+    this.router.get("/logout", authMiddleware, this.logout);
+    this.router.get("/info", authMiddleware, this.getInfo);
+    this.router.post("/signin/new_token", refreshMiddleware, this.refresh);
     this.router.post("/signup", this.signUp);
     this.router.post("/signin", this.signIn);
   }
 
-  private profile = (_, res) => {
-    responseBuilder({
+  private logout = async (req: RequestWithUser, res: Response) => {
+    await this.authService.setCurrentRefreshToken("", req.user.id);
+
+    return responseBuilder({
+      res,
+      code: 204,
+    });
+  };
+
+  private getInfo = (req: RequestWithUser, res: Response) => {
+    return responseBuilder({
       res,
       code: 200,
-      body: 'Безумно',
+      body: { id: req.user.id },
     });
-  }
+  };
+
+  private refresh = (req: Request, res: Response) => {
+    return this.signIn(req, res);
+  };
 
   private signIn = async (req: Request, res: Response) => {
     const { email, password } = req.body;

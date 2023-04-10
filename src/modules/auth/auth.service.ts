@@ -6,7 +6,27 @@ import UsersService from "../users/users.service";
 class AuthService {
   private userService = new UsersService();
 
-  private getJwtRefreshToken(id: number) {
+  public getUserIfRefreshTokenMatches = async (refreshToken: string, id: number) => {
+    const user = await this.userService.findUserById(id);
+
+    const isRefreshTokenMatching = await bcrypt.compare(
+      refreshToken,
+      user.currentHashedRefreshToken,
+    );
+
+    if (isRefreshTokenMatching) {
+      return user;
+    }
+  }
+
+   public setCurrentRefreshToken = async (refreshToken: string, id: number) => {
+    const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.userService.findByIdAndUpdate(id, {
+      currentHashedRefreshToken,
+    });
+  }
+
+  private getJwtRefreshToken = (id: number) => {
     const payload: TokenPayload = { id };
     const expiresIn = "604800s";
     const secret = process.env.REFRESH_TOKEN_SECRET;
@@ -16,9 +36,9 @@ class AuthService {
     return { refresh_token: token };
   }
 
-  private getJwtAccessToken(id: number) {
+  private getJwtAccessToken = (id: number) => {
     const payload: TokenPayload = { id };
-    const expiresIn = "3600s";
+    const expiresIn = "600s";
     const secret = process.env.ACCESS_TOKEN_SECRET;
 
     const token = jwt.sign(payload, secret, { expiresIn });
@@ -39,6 +59,7 @@ class AuthService {
       if (isPasswordMatching) {
         const { access_token } = this.getJwtAccessToken(user.id);
         const { refresh_token } = this.getJwtRefreshToken(user.id);
+        await this.setCurrentRefreshToken(refresh_token, user.id);
 
         return { access_token, refresh_token };
       } else {

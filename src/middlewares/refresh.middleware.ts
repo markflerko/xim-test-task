@@ -4,27 +4,30 @@ import AuthenticationTokenMissingException from "../exceptions/AuthenticationTok
 import WrongAuthenticationTokenException from "../exceptions/WrongAuthenticationTokenException";
 import RequestWithUser from "../interfaces/request-with-user.interface";
 import TokenPayload from "../interfaces/token-payload.interface";
-import UsersService from "../modules/users/users.service";
+import AuthService from "../modules/auth/auth.service";
 
-async function authMiddleware(
+async function refreshMiddleware(
   request: RequestWithUser,
   response: Response,
   next: NextFunction
 ) {
-  const authHeader = (request?.headers?.authorization as string) || "";
-  const accessToken = authHeader.split(" ")[1];
+  const refreshHeader = (request?.headers?.refresh as string) || "";
+  const refreshToken = refreshHeader.split(" ")[1];
 
-  if (accessToken) {
-    const secret = process.env.ACCESS_TOKEN_SECRET;
+  if (refreshToken) {
+    const secret = process.env.REFRESH_TOKEN_SECRET;
     try {
       const verificationResponse = jwt.verify(
-        accessToken,
+        refreshToken,
         secret
       ) as TokenPayload;
 
       const id = verificationResponse.id;
-      const userService = new UsersService();
-      const user = await userService.findUserById(id);
+      const authService = new AuthService();
+      const user = await authService.getUserIfRefreshTokenMatches(
+        refreshToken,
+        id
+      );
 
       if (user) {
         request.user = user;
@@ -40,4 +43,4 @@ async function authMiddleware(
   }
 }
 
-export default authMiddleware;
+export default refreshMiddleware;

@@ -13,6 +13,25 @@ class UsersService {
     this.userRepository = AppDataSource.manager.getRepository(User);
   }
 
+  async findByIdAndUpdate(
+    id: number,
+    dto: Record<string, unknown>
+  ): Promise<User | { message: string }> {
+    const user = await this.findUserById(id);
+
+    if (user) {
+      Object.keys(dto).forEach((key) => {
+        user[`${key}`] = dto[`${key}`];
+      });
+      await this.userRepository.save(user);
+      return user;
+    } else {
+      return {
+        message: `User with id: ${id} not found`,
+      };
+    }
+  }
+
   public findUserById = (id: number) => {
     return this.userRepository.findOne({ where: { id } });
   };
