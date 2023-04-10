@@ -1,21 +1,46 @@
 import * as bcrypt from "bcrypt";
+import * as jwt from "jsonwebtoken";
+import TokenPayload from "../../interfaces/token-payload.interface";
 import UsersService from "../users/users.service";
-import { User } from "./../users/users.entity";
 
 class AuthService {
   private userService = new UsersService();
 
+  private getJwtRefreshToken(id: number) {
+    const payload: TokenPayload = { id };
+    const expiresIn = "604800s";
+    const secret = process.env.REFRESH_TOKEN_SECRET;
+
+    const token = jwt.sign(payload, secret, { expiresIn });
+
+    return { refresh_token: token };
+  }
+
+  private getJwtAccessToken(id: number) {
+    const payload: TokenPayload = { id };
+    const expiresIn = "3600s";
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+
+    const token = jwt.sign(payload, secret, { expiresIn });
+
+    return { access_token: token };
+  }
+
   public signIn = async ({
     email,
     password,
-  }): Promise<User | { message: string }> => {
+  }): Promise<
+    { access_token: string; refresh_token: string } | { message: string }
+  > => {
     const user = await this.userService.findUserByEmail(email);
 
     if (user) {
       const isPasswordMatching = await bcrypt.compare(password, user.password);
       if (isPasswordMatching) {
-        user.password = undefined;
-        return user;
+        const { access_token } = this.getJwtAccessToken(user.id);
+        const { refresh_token } = this.getJwtRefreshToken(user.id);
+
+        return { access_token, refresh_token };
       } else {
         return { message: "Wrong credentials provided" };
       }
