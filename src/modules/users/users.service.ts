@@ -13,6 +13,10 @@ class UsersService {
     this.userRepository = AppDataSource.manager.getRepository(User);
   }
 
+  public findUserById = (id: number) => {
+    return this.userRepository.findOne({ where: { id } });
+  };
+
   public findUserByEmail = (email: string) => {
     return this.userRepository.findOne({ where: { email } });
   };

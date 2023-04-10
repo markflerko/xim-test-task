@@ -1,5 +1,6 @@
 import * as bodyParser from "body-parser";
 import * as express from "express";
+import errorMiddleware from "./middlewares/error.middleware";
 
 class App {
   public app: express.Application;
@@ -10,7 +11,12 @@ class App {
     this.port = port;
 
     this.initializeMiddlewares();
+    this.initializeErrorHandling();
     this.initializeControllers(controllers);
+  }
+
+  private initializeErrorHandling() {
+    this.app.use(errorMiddleware);
   }
 
   private initializeMiddlewares() {
