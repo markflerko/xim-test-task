@@ -93,9 +93,9 @@ class FilesService {
   //   }
   // };
 
-  // public findFileById = (id: number) => {
-  //   return this.fileRepository.findOne({ where: { id } });
-  // };
+  public findFileById = (id: number) => {
+    return this.fileRepository.findOne({ where: { id } });
+  };
 
   public createFile = async (dto) => {
     const createdFile = this.fileRepository.create(dto);

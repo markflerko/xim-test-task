@@ -15,18 +15,9 @@ class FilesController {
   }
 
   public initializeRoutes() {
-    this.router.delete(
-      "/file/delete/:id",
-      authMiddleware,
-      cpUploadMiddleware,
-      this.deleteFileById
-    );
-    this.router.get(
-      "/file/list",
-      authMiddleware,
-      cpUploadMiddleware,
-      this.getFiles
-    );
+    this.router.get("/file/list", authMiddleware, this.getFiles);
+    this.router.get("/file/:id", authMiddleware, this.getFileById);
+    this.router.delete("/file/delete/:id", authMiddleware, this.deleteFileById);
     this.router.post(
       "/file/upload",
       authMiddleware,
@@ -34,6 +25,34 @@ class FilesController {
       this.fileUpload
     );
   }
+
+  private getFileById = async (req: RequestWithUser, res: Response) => {
+    const id = Number(req.params.id);
+
+    if (isFinite(id)) {
+      const result = await this.fileService.findFileById(id);
+
+      if (result) {
+        return responseBuilder({
+          res,
+          body: result,
+          code: 200,
+        });
+      }
+
+      return responseBuilder({
+        res,
+        code: 404,
+        message: `No user found with id: ${id}`,
+      });
+    }
+
+    return responseBuilder({
+      res,
+      code: 400,
+      message: `Provided id: ${id} isn't valid`,
+    });
+  };
 
   private deleteFileById = async (req: RequestWithUser, res: Response) => {
     const id = Number(req.params.id);
