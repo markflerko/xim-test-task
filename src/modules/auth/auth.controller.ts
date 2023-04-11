@@ -4,6 +4,7 @@ import RequestWithUser from "../../interfaces/request-with-user.interface";
 import authMiddleware from "../../middlewares/auth.middleware";
 import refreshMiddleware from "../../middlewares/refresh.middleware";
 import responseBuilder from "../../utils/responseBuilder";
+import tokensBlackList from "../../utils/tokens-black-list";
 import AuthService from "./auth.service";
 
 class AuthController {
@@ -23,6 +24,10 @@ class AuthController {
   }
 
   private logout = async (req: RequestWithUser, res: Response) => {
+    const authHeader = (req?.headers?.authorization as string) || "";
+    const accessToken = authHeader.split(" ")[1];
+    tokensBlackList.push(accessToken);
+
     await this.authService.setCurrentRefreshToken("", req.user.id);
 
     return responseBuilder({

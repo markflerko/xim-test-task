@@ -5,6 +5,7 @@ import WrongAuthenticationTokenException from "../exceptions/WrongAuthentication
 import RequestWithUser from "../interfaces/request-with-user.interface";
 import TokenPayload from "../interfaces/token-payload.interface";
 import UsersService from "../modules/users/users.service";
+import tokensBlackList from "../utils/tokens-black-list";
 
 async function authMiddleware(
   request: RequestWithUser,
@@ -13,8 +14,9 @@ async function authMiddleware(
 ) {
   const authHeader = (request?.headers?.authorization as string) || "";
   const accessToken = authHeader.split(" ")[1];
+  const isBlackListed = tokensBlackList.some((item) => item === accessToken);
 
-  if (accessToken) {
+  if (accessToken && !isBlackListed) {
     const secret = process.env.ACCESS_TOKEN_SECRET;
     try {
       const verificationResponse = jwt.verify(
