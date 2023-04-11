@@ -24,6 +24,8 @@ class FilesController {
 
   private fileUpload = async (req: RequestWithUser, res: Response) => {
     const { file } = req.files as Record<string, Express.Multer.File[]>;
+    const { originalname, mimetype, size, buffer } = file[0];
+    const extension = originalname.split(".").pop();
 
     // const pathToFile = path.join(
     //   __dirname,
@@ -33,7 +35,7 @@ class FilesController {
     //   file[0].originalname.split(".").pop()
     // );
 
-    await fs.promises.writeFile(`/tmp/${file[0].originalname}`, file[0].buffer);
+    await fs.promises.writeFile(`/tmp/${originalname}`, buffer);
 
     return responseBuilder({
       res,
