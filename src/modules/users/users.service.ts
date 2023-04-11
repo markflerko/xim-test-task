@@ -14,7 +14,7 @@ class UsersService {
   }
 
   async findByIdAndUpdate(
-    id: number,
+    id: string,
     dto: Record<string, unknown>
   ): Promise<User | { message: string }> {
     const user = await this.findUserById(id);
@@ -32,12 +32,8 @@ class UsersService {
     }
   }
 
-  public findUserById = (id: number) => {
+  public findUserById = (id: string) => {
     return this.userRepository.findOne({ where: { id } });
-  };
-
-  public findUserByEmail = (email: string) => {
-    return this.userRepository.findOne({ where: { email } });
   };
 
   public createUser = async (dto) => {

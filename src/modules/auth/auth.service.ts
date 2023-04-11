@@ -9,7 +9,7 @@ class AuthService {
 
   public getUserIfRefreshTokenMatches = async (
     refreshToken: string,
-    id: number
+    id: string
   ) => {
     const user = await this.userService.findUserById(id);
 
@@ -23,14 +23,14 @@ class AuthService {
     }
   };
 
-  public setCurrentRefreshToken = async (refreshToken: string, id: number) => {
+  public setCurrentRefreshToken = async (refreshToken: string, id: string) => {
     const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.userService.findByIdAndUpdate(id, {
       currentHashedRefreshToken,
     });
   };
 
-  private getJwtRefreshToken = (id: number) => {
+  private getJwtRefreshToken = (id: string) => {
     const payload: TokenPayload = { id };
     const expiresIn = "604800s";
     const secret = process.env.REFRESH_TOKEN_SECRET;
@@ -40,7 +40,7 @@ class AuthService {
     return { refresh_token: token };
   };
 
-  private getJwtAccessToken = (id: number) => {
+  private getJwtAccessToken = (id: string) => {
     const payload: TokenPayload = { id };
     const expiresIn = "600s";
     const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -63,12 +63,12 @@ class AuthService {
   };
 
   public signIn = async ({
-    email,
+    id,
     password,
   }): Promise<
     { access_token: string; refresh_token: string } | { message: string }
   > => {
-    const user = await this.userService.findUserByEmail(email);
+    const user = await this.userService.findUserById(id);
 
     if (user) {
       const isPasswordMatching = await bcrypt.compare(password, user.password);
@@ -82,14 +82,20 @@ class AuthService {
         return { message: "Wrong credentials provided" };
       }
     } else {
-      return { message: `No user found with email: ${email}` };
+      return { message: `No user found with id: ${id}` };
     }
   };
 
-  public signUp = async ({ email, password }) => {
+  public signUp = async ({ id, password }) => {
+    const isUserExist = await this.userService.findUserById(id);
+
+    if (isUserExist) {
+      return { message: `User with id: ${id} already exist` };
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    return this.userService.createUser({ email, password: hashedPassword });
+    return this.userService.createUser({ id, password: hashedPassword });
   };
 }
 

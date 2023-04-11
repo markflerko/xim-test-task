@@ -50,8 +50,8 @@ class AuthController {
   };
 
   private signIn = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const result = await this.authService.signIn({ email, password });
+    const { id, password } = req.body;
+    const result = await this.authService.signIn({ id, password });
     if (result["message"]) {
       responseBuilder({
         res,
@@ -68,15 +68,23 @@ class AuthController {
   };
 
   private signUp = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { id, password } = req.body;
 
-    const createdUser = await this.authService.signUp({ email, password });
+    const result = await this.authService.signUp({ id, password });
 
-    responseBuilder({
-      res,
-      code: 201,
-      body: createdUser,
-    });
+    if (result["message"]) {
+      responseBuilder({
+        res,
+        code: 400,
+        message: result["message"],
+      });
+    } else {
+      responseBuilder({
+        res,
+        code: 201,
+        body: result,
+      });
+    }
   };
 }
 
