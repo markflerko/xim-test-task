@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import User from "../users/users.entity";
 
 @Entity()
 class File {
@@ -25,6 +27,9 @@ class File {
 
   @Column()
   size: number;
+
+  @ManyToOne(() => User, (user: User) => user.files)
+  user: User;
 
   @CreateDateColumn({ type: "timestamp" })
   uploadDate: Date;

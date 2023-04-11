@@ -26,6 +26,7 @@ class FilesController {
     );
   }
 
+  //req also have files, not only user
   private fileUpload = async (req: RequestWithUser, res: Response) => {
     const { file } = req.files as Record<string, Express.Multer.File[]>;
     const { originalname, mimetype, size, buffer } = file[0];
@@ -38,9 +39,19 @@ class FilesController {
       extension,
       mimetype,
       size,
+      user: req.user,
     });
 
-    const pathToFile = path.join(__dirname, "..", '..', '..', "public", localname);
+    createdFile["user"] = undefined;
+
+    const pathToFile = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "public",
+      localname
+    );
 
     await fs.promises.writeFile(pathToFile, buffer);
 
