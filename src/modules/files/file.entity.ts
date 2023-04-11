@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
 @Entity()
 class File {
@@ -6,13 +12,25 @@ class File {
   public id: number;
 
   @Column()
-  filename: string;
+  localname: string;
 
   @Column()
-  path: string;
+  originalname: string;
+
+  @Column()
+  extension: string;
 
   @Column()
   mimetype: string;
+
+  @Column()
+  size: number;
+
+  @CreateDateColumn({ type: "timestamp" })
+  uploadDate: Date;
+
+  @UpdateDateColumn({ type: "timestamp" })
+  updatedAt: Date;
 }
 
 export default File;

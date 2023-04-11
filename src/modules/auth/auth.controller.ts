@@ -66,7 +66,11 @@ class AuthController {
 
     const createdUser = await this.authService.signUp({ email, password });
 
-    res.send(createdUser);
+    responseBuilder({
+      res,
+      code: 201,
+      body: createdUser,
+    });
   };
 }
 
