@@ -39,8 +39,14 @@ class AuthController {
     });
   };
 
-  private refresh = (req: Request, res: Response) => {
-    return this.signIn(req, res);
+  private refresh = async (req: RequestWithUser, res: Response) => {
+    const result = await this.authService.refresh(req.user);
+
+    responseBuilder({
+      res,
+      code: 200,
+      body: result,
+    });
   };
 
   private signIn = async (req: Request, res: Response) => {
