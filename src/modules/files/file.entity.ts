@@ -14,7 +14,7 @@ class File {
   public id: number;
 
   @Column()
-  localname: string;
+  pathToFile: string;
 
   @Column()
   originalname: string;

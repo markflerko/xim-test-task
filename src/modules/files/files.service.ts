@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { AppDataSource } from "../../data-source";
 import User from "../users/users.entity";
 import File from "./file.entity";
+import removeFile from "../../utils/delete-file";
 
 class FilesService {
   private fileRepository: Repository<File>;
@@ -20,11 +21,19 @@ class FilesService {
   public deleteFileById = async (
     id: number
   ): Promise<{ affected: number } | { message: string }> => {
+    const file = await this.findFileById(id);
+
+    if (!file) {
+      return { message: `No file found with id: ${id}` };
+    }
+
     const { affected } = await this.fileRepository.delete(id);
 
     if (!affected) {
       return { message: `No deletion was performed` };
     }
+
+    await removeFile(file.pathToFile)
 
     return { affected };
   };
@@ -47,10 +56,19 @@ class FilesService {
   public fileUpload = async (file: Express.Multer.File, user: User) => {
     const { originalname, mimetype, size, buffer } = file;
     const extension = originalname.split(".").pop();
-    const localname = `${uuidv4()}.${extension}`;
+    const filename = `${uuidv4()}.${extension}`;
+
+    const pathToFile = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "public",
+      filename
+    );
 
     const createdFile = await this.createFile({
-      localname,
+      pathToFile,
       originalname,
       extension,
       mimetype,
@@ -60,48 +78,39 @@ class FilesService {
 
     createdFile["user"] = undefined;
 
-    const pathToFile = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "public",
-      localname
-    );
-
     await fs.promises.writeFile(pathToFile, buffer);
 
     return createdFile;
   };
-
-  // public findByIdAndUpdate = async (
-  //   id: number,
-  //   dto: Record<string, unknown>
-  // ): Promise<File | { message: string }> => {
-  //   const file = await this.findFileById(id);
-
-  //   if (file) {
-  //     Object.keys(dto).forEach((key) => {
-  //       file[`${key}`] = dto[`${key}`];
-  //     });
-  //     await this.fileRepository.save(file);
-  //     return file;
-  //   } else {
-  //     return {
-  //       message: `File with id: ${id} not found`,
-  //     };
-  //   }
-  // };
-
+  
   public findFileById = (id: number) => {
     return this.fileRepository.findOne({ where: { id } });
   };
-
+  
   public createFile = async (dto) => {
     const createdFile = this.fileRepository.create(dto);
     await this.fileRepository.save(createdFile);
     return createdFile;
   };
+  
+    // public findByIdAndUpdate = async (
+    //   id: number,
+    //   dto: Record<string, unknown>
+    // ): Promise<File | { message: string }> => {
+    //   const file = await this.findFileById(id);
+  
+    //   if (file) {
+    //     Object.keys(dto).forEach((key) => {
+    //       file[`${key}`] = dto[`${key}`];
+    //     });
+    //     await this.fileRepository.save(file);
+    //     return file;
+    //   } else {
+    //     return {
+    //       message: `File with id: ${id} not found`,
+    //     };
+    //   }
+    // };
 }
 
 export default FilesService;
