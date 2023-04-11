@@ -82,7 +82,11 @@ class AuthController {
       responseBuilder({
         res,
         code: 201,
-        body: result,
+        body: {
+          ...result,
+          password: undefined,
+          currentHashedRefreshToken: undefined,
+        },
       });
     }
   };
