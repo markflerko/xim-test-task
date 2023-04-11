@@ -16,6 +16,12 @@ class FilesController {
   }
 
   public initializeRoutes() {
+    this.router.put(
+      "/file/update/:id",
+      authMiddleware,
+      cpUploadMiddleware,
+      this.updateFileById
+    );
     this.router.get(
       "/file/download/:id",
       authMiddleware,
@@ -137,7 +143,36 @@ class FilesController {
     });
   };
 
-  //req also have files, not only user
+  private updateFileById = async (req: RequestWithUser, res: Response) => {
+    const id = Number(req.params.id);
+
+    if (isFinite(id)) {
+      const { file } = req.files as Record<string, Express.Multer.File[]>;
+
+      const result = await this.fileService.updateFileById(file[0], id);
+
+      if (result["message"]) {
+        return responseBuilder({
+          res,
+          code: 404,
+          body: result["message"],
+        });
+      }
+
+      return responseBuilder({
+        res,
+        code: 200,
+        body: result,
+      });
+    }
+
+    return responseBuilder({
+      res,
+      code: 400,
+      message: `Provided id: ${id} isn't valid`,
+    });
+  };
+
   private fileUpload = async (req: RequestWithUser, res: Response) => {
     const { file } = req.files as Record<string, Express.Multer.File[]>;
 

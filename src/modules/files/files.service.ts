@@ -1,11 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
-import { Readable } from "stream";
 import { Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import { AppDataSource } from "../../data-source";
 import removeFile from "../../utils/delete-file";
-import User from "../users/users.entity";
 import File from "./file.entity";
 
 class FilesService {
@@ -54,6 +52,41 @@ class FilesService {
     };
   };
 
+  public updateFileById = async (file: Express.Multer.File, id: number) => {
+    const fileEntity = await this.findFileById(id);
+
+    if (fileEntity) {
+      await removeFile(fileEntity.pathToFile);
+    }
+
+    const { originalname, mimetype, size, buffer } = file;
+    const extension = originalname.split(".").pop();
+    const filename = `${uuidv4()}.${extension}`;
+
+    const pathToFile = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "public",
+      filename
+    );
+
+    const updatedFile = await this.findByIdAndUpdate(id, {
+      pathToFile,
+      originalname,
+      extension,
+      mimetype,
+      size,
+    });
+
+    updatedFile["user"] = undefined;
+
+    await fs.promises.writeFile(pathToFile, buffer);
+
+    return updatedFile;
+  };
+
   public fileUpload = async (file: Express.Multer.File) => {
     const { originalname, mimetype, size, buffer } = file;
     const extension = originalname.split(".").pop();
@@ -93,24 +126,24 @@ class FilesService {
     return createdFile;
   };
 
-  // public findByIdAndUpdate = async (
-  //   id: number,
-  //   dto: Record<string, unknown>
-  // ): Promise<File | { message: string }> => {
-  //   const file = await this.findFileById(id);
+  public findByIdAndUpdate = async (
+    id: number,
+    dto: Record<string, unknown>
+  ): Promise<File | { message: string }> => {
+    const file = await this.findFileById(id);
 
-  //   if (file) {
-  //     Object.keys(dto).forEach((key) => {
-  //       file[`${key}`] = dto[`${key}`];
-  //     });
-  //     await this.fileRepository.save(file);
-  //     return file;
-  //   } else {
-  //     return {
-  //       message: `File with id: ${id} not found`,
-  //     };
-  //   }
-  // };
+    if (file) {
+      Object.keys(dto).forEach((key) => {
+        file[`${key}`] = dto[`${key}`];
+      });
+      await this.fileRepository.save(file);
+      return file;
+    } else {
+      return {
+        message: `File with id: ${id} not found`,
+      };
+    }
+  };
 }
 
 export default FilesService;
