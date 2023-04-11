@@ -15,3 +15,5 @@ export class User {
   @Column({ default: "" })
   currentHashedRefreshToken: string;
 }
+
+export default User;
