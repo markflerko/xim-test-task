@@ -17,6 +17,18 @@ class FilesService {
     this.fileRepository = AppDataSource.manager.getRepository(File);
   }
 
+  public deleteFileById = async (
+    id: number
+  ): Promise<{ affected: number } | { message: string }> => {
+    const { affected } = await this.fileRepository.delete(id);
+
+    if (!affected) {
+      return { message: `No deletion was performed` };
+    }
+
+    return { affected };
+  };
+
   public getFiles = async (skip: number, take: number) => {
     const [items, count] = await this.fileRepository.findAndCount({
       order: {
@@ -27,8 +39,8 @@ class FilesService {
     });
 
     return {
-      items,
       count,
+      items,
     };
   };
 
@@ -62,28 +74,28 @@ class FilesService {
     return createdFile;
   };
 
-  public findByIdAndUpdate = async (
-    id: number,
-    dto: Record<string, unknown>
-  ): Promise<File | { message: string }> => {
-    const file = await this.findFileById(id);
+  // public findByIdAndUpdate = async (
+  //   id: number,
+  //   dto: Record<string, unknown>
+  // ): Promise<File | { message: string }> => {
+  //   const file = await this.findFileById(id);
 
-    if (file) {
-      Object.keys(dto).forEach((key) => {
-        file[`${key}`] = dto[`${key}`];
-      });
-      await this.fileRepository.save(file);
-      return file;
-    } else {
-      return {
-        message: `File with id: ${id} not found`,
-      };
-    }
-  };
+  //   if (file) {
+  //     Object.keys(dto).forEach((key) => {
+  //       file[`${key}`] = dto[`${key}`];
+  //     });
+  //     await this.fileRepository.save(file);
+  //     return file;
+  //   } else {
+  //     return {
+  //       message: `File with id: ${id} not found`,
+  //     };
+  //   }
+  // };
 
-  public findFileById = (id: number) => {
-    return this.fileRepository.findOne({ where: { id } });
-  };
+  // public findFileById = (id: number) => {
+  //   return this.fileRepository.findOne({ where: { id } });
+  // };
 
   public createFile = async (dto) => {
     const createdFile = this.fileRepository.create(dto);

@@ -28,9 +28,6 @@ class File {
   @Column()
   size: number;
 
-  @ManyToOne(() => User, (user: User) => user.files)
-  user: User;
-
   @CreateDateColumn({ type: "timestamp" })
   uploadDate: Date;
 

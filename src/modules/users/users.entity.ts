@@ -21,13 +21,6 @@ export class User {
 
   @Column({ default: "" })
   currentHashedRefreshToken: string;
-
-  @OneToMany(() => File, (file: File) => file.user, {
-    eager: true,
-    cascade: true,
-  })
-  @JoinColumn()
-  public files: File[];
 }
 
 export default User;
