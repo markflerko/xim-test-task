@@ -1,8 +1,5 @@
 import * as express from "express";
 import { Response } from "express";
-import * as fs from "fs";
-import * as path from "path";
-import { v4 as uuidv4 } from "uuid";
 import RequestWithUser from "../../interfaces/request-with-user.interface";
 import authMiddleware from "../../middlewares/auth.middleware";
 import cpUploadMiddleware from "../../middlewares/cp-upload.middleware";
@@ -18,6 +15,12 @@ class FilesController {
   }
 
   public initializeRoutes() {
+    this.router.get(
+      "/file/list",
+      authMiddleware,
+      cpUploadMiddleware,
+      this.getFiles
+    );
     this.router.post(
       "/file/upload",
       authMiddleware,
@@ -26,34 +29,32 @@ class FilesController {
     );
   }
 
+  private getFiles = async (req: RequestWithUser, res: Response) => {
+    const { page, list_size } = req.query;
+
+    const take =
+      isFinite(Number(list_size)) && Number(list_size) > 0
+        ? Number(list_size)
+        : 10;
+    const skip =
+      isFinite(Number(page)) && Number(page) > 0
+        ? (Number(page) - 1) * take
+        : 0;
+
+    const result = await this.fileService.getFiles(skip, take);
+
+    return responseBuilder({
+      res,
+      code: 200,
+      body: result,
+    });
+  };
+
   //req also have files, not only user
   private fileUpload = async (req: RequestWithUser, res: Response) => {
     const { file } = req.files as Record<string, Express.Multer.File[]>;
-    const { originalname, mimetype, size, buffer } = file[0];
-    const extension = originalname.split(".").pop();
-    const localname = `${uuidv4()}.${extension}`;
 
-    const createdFile = await this.fileService.createFile({
-      localname,
-      originalname,
-      extension,
-      mimetype,
-      size,
-      user: req.user,
-    });
-
-    createdFile["user"] = undefined;
-
-    const pathToFile = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "public",
-      localname
-    );
-
-    await fs.promises.writeFile(pathToFile, buffer);
+    const createdFile = await this.fileService.fileUpload(file[0], req.user);
 
     return responseBuilder({
       res,
